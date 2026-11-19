@@ -1,0 +1,28 @@
+id: dk.ehmi.transitionsModel
+canonical: http://medcomehmi.dk/ig/ehmiTransitionsModel
+name: DK EHMI TransitionsModel
+title: "DK EHMI TransitionsModel"
+description: The DK EHMI TransitionsModel
+status: active
+version: 0.0.1
+fhirVersion: 4.0.1
+copyrightYear: 2026+
+releaseLabel: release
+jurisdiction: urn:iso:std:iso:3166#DK "Denmark"
+publisher:
+  name: MedCom
+  url: http://medcom.dk
+
+dependencies:
+#  medcom.fhir.dk.core: 2.4.0
+#  medcom.fhir.dk.messaging: 4.0.1
+#  medcom.fhir.dk.terminology: 2.0.2
+
+menu:
+  Home: index.html
+  Artifacts: artifacts.html
+  More:
+    Table of Contents: toc.html
+
+instanceOptions:
+  manualSliceOrdering: true # true | false
