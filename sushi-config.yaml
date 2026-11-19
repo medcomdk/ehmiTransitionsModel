@@ -20,5 +20,9 @@ dependencies:
 
 menu:
   Home: index.html
- nstanceOptions:
-  manualSliceOrdering: true
+  Artifacts: artifacts.html
+  More:
+    Table of Contents: toc.html
+
+instanceOptions:
+  manualSliceOrdering: true # true | false

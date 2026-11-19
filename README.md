@@ -1,4 +1,4 @@
-# DK-EHMI-SBDH
+# Implementation guide for the EHMI TransitionsModel
 
-Core profiles for the EHMI Infrastructure
+Core profiles for the EHMI TransitionsModel
 
