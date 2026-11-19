@@ -1,4 +1,4 @@
-# Implementation guide for the EHMI TransitionsModel
+# Implementation guide for the EHMI Transition Model
 
-Core profiles for the EHMI TransitionsModel
+Profiles for the EHMI TransitionsModel
 
