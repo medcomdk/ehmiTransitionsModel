@@ -7,7 +7,6 @@
     "first" : true,
     "descmd": "@release-notes.md",
     "desc": "First official release of the DK EHMI TransitionsModel IG on medcomehmi.dk.",
-    "first": true,
     "title": "DK EHMI TransitionsModel IG",
     "ci-build": "https://build.fhir.org/ig/medcomdk/dk-ehmi-transitionsModel",
     "category": "Infrastructure",
