@@ -1,0 +1,60 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+title Komb. 2: Integreret EUA+MSH (Afsender) -> Standalone MSH (Modtager)
+
+legend top
+  **Scenarie:** Moderne kommunalt fagsystem (FHIR nativt) sender til et hospital med ældre EPJ bag en regional servicebus.
+  * **Afsenderside (Variant A1):** EUA har indbygget MSH, taler FHIR nativt og springer konvertering over.
+  * **Modtagerside (Variant M2):** Hospitalets Standalone MSH opfanger FHIR-beskeden og mapper den til EDIFACT til EPJ.
+endlegend
+
+box "Afsenderside (Variant A1: Integreret EUA+MSH)" #F4F8FB
+    actor "Afsender EUA + MSH\n(FHIR Nativ)" as S_EUA_MSH
+    participant "Afsender AP/VANS" as S_AP
+end box
+
+participant "EER" as EER
+
+box "Modtagerside (Variant M2: Standalone MSH)" #F9F5FA
+    participant "Modtager AP/VANS" as R_AP
+    participant "Standalone MSH" as R_MSH
+    actor "Modtager EUA\n(EDIFACT)" as R_EUA
+end box
+
+activate S_EUA_MSH
+S_EUA_MSH -> EER : Opslag på modtager gs1.org/gln
+EER --> S_EUA_MSH : Modtager Public=FHIR (Matcher EUA'ens eget format)
+
+note right of S_EUA_MSH
+  **Pass-through (Ingen mapning):**
+  EUA taler allerede det offentlige
+  udvekslingsformat (FHIR) nativt
+end note
+S_EUA_MSH -> S_AP : Overdrager FHIR-besked
+deactivate S_EUA_MSH
+
+activate S_AP
+S_AP -> R_AP : Transporterer FHIR-besked
+deactivate S_AP
+
+activate R_AP
+R_AP -> R_MSH : Videresender indkommende FHIR-besked
+deactivate R_AP
+
+activate R_MSH
+R_MSH -> EER : Opslag på modtager eua-gln
+EER --> R_MSH : Modtager EUA kræver EDIFACT
+
+note left of R_MSH
+  **Modtager-mapning:**
+  Regional MSH nedkonverterer
+  FHIR -> EDIFACT til hospitalets EPJ
+end note
+R_MSH -> R_MSH : Konverterer FHIR -> EDIFACT
+R_MSH -> R_EUA : Afleverer EDIFACT til EPJ
+deactivate R_MSH
+
+@enduml

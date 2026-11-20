@@ -1,0 +1,55 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+title Komb. 1: Integreret EUA+MSH (Afsender) -> Integreret EUA+MSH (Modtager)
+
+legend top
+  **Scenarie (Målbillede):** To moderne fagsystemer der begge understøtter FHIR og MSH nativt.
+  * **Afsenderside (Variant A1):** EUA danner FHIR-meddelelse og validerer modtagers offentlige endpoint i EER.
+  * **Modtagerside (Variant M1):** Modtager-EUA indlæser FHIR-meddelelsen direkte uden behov for konvertering.
+endlegend
+
+box "Afsenderside (Variant A1: Integreret EUA+MSH)" #F4F8FB
+    actor "Afsender EUA + MSH\n(FHIR Nativ)" as S_EUA_MSH
+    participant "Afsender AP/VANS" as S_AP
+end box
+
+participant "EER" as EER
+
+box "Modtagerside (Variant M1: Integreret EUA+MSH)" #F9F5FA
+    participant "Modtager AP/VANS" as R_AP
+    actor "Modtager EUA + MSH\n(FHIR Nativ)" as R_EUA_MSH
+end box
+
+activate S_EUA_MSH
+S_EUA_MSH -> EER : Opslag på modtager gs1.org/gln
+EER --> S_EUA_MSH : Modtager Public=FHIR (Matcher nativt format)
+
+note right of S_EUA_MSH
+  **Nativ afsendelse:**
+  Ingen mapning påkrævet
+end note
+S_EUA_MSH -> S_AP : Overdrager FHIR-besked
+deactivate S_EUA_MSH
+
+activate S_AP
+S_AP -> R_AP : Transporterer FHIR-besked (AS4 / VANS)
+deactivate S_AP
+
+activate R_AP
+R_AP -> R_EUA_MSH : Afleverer FHIR-besked direkte
+deactivate R_AP
+
+activate R_EUA_MSH
+R_EUA_MSH -> EER : (Valgfrit) Verificerer mod eget eua-gln (FHIR)
+EER --> R_EUA_MSH : Matcher nativt format (FHIR)
+
+note left of R_EUA_MSH
+  **Nativ modtagelse:**
+  Indlæses direkte i fagsystemet
+end note
+deactivate R_EUA_MSH
+
+@enduml

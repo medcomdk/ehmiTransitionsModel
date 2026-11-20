@@ -1,0 +1,53 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+title Komb. 9: Integreret MSH+AP/VANS (Afsender) -> Integreret MSH+AP/VANS (Modtager)
+
+legend top
+  **Scenarie:** To klassiske systemer (OIOXML og EDIFACT) kommunikerer via den moderne EHMI-rygrad.
+  * **Afsenderside (Variant A3):** Afsenders VANS/AP opgraderer OIOXML til det kanoniske FHIR-format.
+  * **Modtagerside (Variant M3):** Modtagers VANS/AP nedkonverterer FHIR til modtagerens reelle EDIFACT-format.
+endlegend
+
+box "Afsenderside (Variant A3: MSH i AP/VANS)" #F4F8FB
+    actor "Afsender EUA\n(OIOXML)" as S_EUA
+    participant "Afsender MSH + AP/VANS" as S_MSH_AP
+end box
+
+participant "EER" as EER
+
+box "Modtagerside (Variant M3: MSH i AP/VANS)" #F9F5FA
+    participant "Modtager MSH + AP/VANS" as R_MSH_AP
+    actor "Modtager EUA\n(EDIFACT)" as R_EUA
+end box
+
+S_EUA -> S_MSH_AP : Afleverer OIOXML besked
+activate S_MSH_AP
+S_MSH_AP -> EER : Opslag på afsender eua-gln + modtager gs1.org/gln
+EER --> S_MSH_AP : Afsender=OIOXML, Modtager Public=FHIR
+
+note right of S_MSH_AP
+  **Afsender-opgradering:**
+  VANS/AP løfter OIOXML -> FHIR
+  til transport over EHMI
+end note
+S_MSH_AP -> S_MSH_AP : Opgraderer OIOXML -> FHIR
+S_MSH_AP -> R_MSH_AP : Transporterer FHIR-besked
+deactivate S_MSH_AP
+
+activate R_MSH_AP
+R_MSH_AP -> EER : Opslag på modtager eua-gln
+EER --> R_MSH_AP : Modtager EUA kræver EDIFACT
+
+note left of R_MSH_AP
+  **Modtager-nedkonvertering:**
+  VANS/AP konverterer FHIR -> EDIFACT
+  før aflevering i lokal postkasse
+end note
+R_MSH_AP -> R_MSH_AP : Konverterer FHIR -> EDIFACT
+R_MSH_AP -> R_EUA : Afleverer EDIFACT besked
+deactivate R_MSH_AP
+
+@enduml

@@ -1,0 +1,59 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+title Komb. 4: Standalone MSH (Afsender) -> Integreret EUA+MSH (Modtager)
+
+legend top
+  **Scenarie:** Hospital med regional integrationsmotor (Standalone MSH) sender til moderne kommunalt fagsystem (FHIR nativt).
+  * **Afsenderside (Variant A2):** Regional MSH løfter hospitalets interne EPJ-format til FHIR.
+  * **Modtagerside (Variant M1):** Kommunens moderne fagsystem indlæser den rene FHIR-besked direkte.
+endlegend
+
+box "Afsenderside (Variant A2: Standalone MSH)" #F4F8FB
+    actor "Afsender EUA\n(Internt EPJ-format)" as S_EUA
+    participant "Standalone MSH" as S_MSH
+    participant "Afsender AP/VANS" as S_AP
+end box
+
+participant "EER" as EER
+
+box "Modtagerside (Variant M1: Integreret EUA+MSH)" #F9F5FA
+    participant "Modtager AP/VANS" as R_AP
+    actor "Modtager EUA + MSH\n(FHIR Nativ)" as R_EUA_MSH
+end box
+
+S_EUA -> S_MSH : Afleverer besked i internt format
+activate S_MSH
+S_MSH -> EER : Opslag på afsender eua-gln + modtager gs1.org/gln
+EER --> S_MSH : Afsender=Internt, Modtager Public=FHIR
+
+note right of S_MSH
+  **Afsender-mapning:**
+  Standalone MSH konverterer
+  Internt format -> FHIR
+end note
+S_MSH -> S_MSH : Konverterer Internt -> FHIR
+S_MSH -> S_AP : Overdrager FHIR-besked
+deactivate S_MSH
+
+activate S_AP
+S_AP -> R_AP : Transporterer FHIR-besked
+deactivate S_AP
+
+activate R_AP
+R_AP -> R_EUA_MSH : Afleverer FHIR-besked direkte
+deactivate R_AP
+
+activate R_EUA_MSH
+R_EUA_MSH -> EER : (Valgfrit) Verificerer mod eget eua-gln (FHIR)
+EER --> R_EUA_MSH : Matcher nativt format (FHIR)
+
+note left of R_EUA_MSH
+  **Nativ modtagelse:**
+  Indlæses direkte uden konvertering
+end note
+deactivate R_EUA_MSH
+
+@enduml

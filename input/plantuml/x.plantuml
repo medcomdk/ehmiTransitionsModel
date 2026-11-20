@@ -1,0 +1,55 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+actor "Afsender EUA" as Sender
+participant "EER\n(FHIR Endpoint Register)" as EER
+participant "EHMI Access Point\n/ MSH" as EHMI
+participant "Mapningskomponent\n(EHMI / VANS)" as Map
+participant "Modtager VANS" as VANS
+actor "Modtager EUA\n(OIOXML)" as Receiver
+
+== 1. Opslag af offentlig kapabilitet ==
+Sender -> EER : GET /Endpoint?identifier=gs1.org/gln|5790001234567
+activate EER
+EER --> Sender : Returnerer Public Endpoint\n(EHMI AP, FHIR CareCommunication)
+deactivate EER
+
+== 2. Afsendelse via EHMI ==
+Sender -> EHMI : Sender FHIR Bundle (ehmiSBDH + AS4)
+activate EHMI
+
+== 3. Opslag af reel EUA-kapabilitet ==
+EHMI -> EER : GET /Endpoint?identifier=eua-gln|5790001234567
+activate EER
+EER --> EHMI : Returnerer EUA Target Endpoint\n(VANS, OIOXML DIS91)
+deactivate EER
+
+== 4. Mapning og aflevering ==
+EHMI -> Map : Overdrager FHIR Bundle + Target Profile (DIS91)
+deactivate EHMI
+activate Map
+Map -> Map : Konverterer FHIR -> OIOXML + VANSEnvelope
+Map -> VANS : Afleverer OIOXML besked til GLN 5790001234567
+deactivate Map
+activate VANS
+VANS -> Receiver : Henter OIOXML i lokal postkasse
+deactivate VANS
+
+== 5. Kvitteringsflow (CTL / Acknowledgement) ==
+activate Receiver
+Receiver -> VANS : Sender OIOXML Positiv/Negativ Kvittering (CTL)
+deactivate Receiver
+activate VANS
+VANS -> Map : Videresender OIOXML CTL
+deactivate VANS
+activate Map
+Map -> Map : Konverterer OIOXML CTL -> FHIR Acknowledgement
+Map -> EHMI : Sender FHIR Ack via AS4/ehmiSBDH
+deactivate Map
+activate EHMI
+EHMI -> Sender : Modtager FHIR kvittering i oprindeligt format
+deactivate EHMI
+
+@enduml

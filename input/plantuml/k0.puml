@@ -1,0 +1,79 @@
+@startuml
+skinparam style strictuml
+skinparam componentStyle rectangle
+left to right direction
+
+title Samlet Arkitekturoverblik: MSH-placeringer & EER Opslag
+
+legend top
+  **Arkitektonisk hovedprincip (3 x 3 kombinationer):**
+  * **Afsenderside (A1-A3):** MSH slår afsenderens **eua-gln** og modtagerens **gs1.org/gln** op i EER for at sikre, at beskeden sendes i det offentligt aftalte format (f.eks. FHIR).
+  * **Modtagerside (M1-M3):** MSH slår modtagerens **eua-gln** op i EER for at konvertere fra det offentlige format til fagsystemets (EUA) reelle format.
+  * **Uafhængighed:** Enhver variant på afsendersiden (A1, A2, A3) kan kommunikere frit med enhver variant på modtagersiden (M1, M2, M3).
+endlegend
+
+package "Afsenderside (3 Topologier)" #F4F8FB {
+    package "Variant A1: Integreret i EUA" {
+        [Afsender EUA + MSH] as S_A1
+        [Afsender AP / VANS] as S_AP1
+        S_A1 --> S_AP1 : Kanonisk format (FHIR)
+    }
+
+    package "Variant A2: Standalone MSH" {
+        [Afsender EUA] as S_EUA2
+        [Standalone MSH] as S_MSH2
+        [Afsender AP / VANS ] as S_AP2
+        S_EUA2 --> S_MSH2 : Lokalt format
+        S_MSH2 --> S_AP2 : Kanonisk format
+    }
+
+    package "Variant A3: Integreret i AP/VANS" {
+        [Afsender EUA ] as S_EUA3
+        [Afsender MSH + AP / VANS] as S_AP3
+        S_EUA3 --> S_AP3 : Lokalt format
+    }
+}
+
+cloud "Transportnetværk\n(EHMI AS4 / VANS)" as Net
+
+database "EER\n(FHIR Endpoint Register)\n- Public GLN\n- EUA GLN" as EER
+
+package "Modtagerside (3 Topologier)" #F9F5FA {
+    package "Variant M1: Integreret i EUA" {
+        [Modtager AP / VANS] as R_AP1
+        [Modtager EUA + MSH] as R_M1
+        R_AP1 --> R_M1 : Kanonisk format (FHIR)
+    }
+
+    package "Variant M2: Standalone MSH" {
+        [Modtager AP / VANS ] as R_AP2
+        [Standalone MSH ] as R_MSH2
+        [Modtager EUA] as R_EUA2
+        R_AP2 --> R_MSH2 : Kanonisk format
+        R_MSH2 --> R_EUA2 : Lokalt format
+    }
+
+    package "Variant M3: Integreret i AP/VANS" {
+        [Modtager MSH + AP / VANS] as R_AP3
+        [Modtager EUA ] as R_EUA3
+        R_AP3 --> R_EUA3 : Lokalt format
+    }
+}
+
+S_AP1 --> Net
+S_AP2 --> Net
+S_AP3 --> Net
+
+Net --> R_AP1
+Net --> R_AP2
+Net --> R_AP3
+
+S_A1 ..> EER : Opslag
+S_MSH2 ..> EER : Opslag
+S_AP3 ..> EER : Opslag
+
+R_M1 ..> EER : Opslag
+R_MSH2 ..> EER : Opslag
+R_AP3 ..> EER : Opslag
+
+@enduml

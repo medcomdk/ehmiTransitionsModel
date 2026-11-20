@@ -1,0 +1,72 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+box "Afsenderside (GLN: 5790009999999)" #F4F8FB
+    actor "Afsender EUA\n(Taler kun OIOXML)" as Sender
+    participant "Afsender Mapning" as SenderMap
+    participant "Afsender AP / VANS\n(Afsender-gateway)" as SenderGW
+end box
+
+participant "EER\n(FHIR Endpoint Register)" as EER
+
+box "Modtagerside (GLN: 5790001234567)" #F9F5FA
+    participant "Modtager AP / VANS\n(Modtager-gateway)" as ReceiverGW
+    participant "Modtager Mapning" as ReceiverMap
+    actor "Modtager EUA\n(Taler kun EDIFACT)" as Receiver
+end box
+
+== 1. Afsenderside: Opslag på offentligt udvekslingsformat ==
+Sender -> SenderGW : Afleverer besked i internt format (OIOXML)
+activate SenderGW
+SenderGW -> EER : GET /Endpoint?identifier=gs1.org/gln|5790001234567
+activate EER
+EER --> SenderGW : Public Endpoint\n(Udvekslingsformat er FHIR via EHMI)
+deactivate EER
+
+== 2. Afsenderside: Mapning til aftalt udvekslingsformat ==
+SenderGW -> SenderMap : Konverter OIOXML -> FHIR (aftalt standard)
+activate SenderMap
+SenderMap --> SenderGW : Returnerer FHIR-meddelelse
+deactivate SenderMap
+
+SenderGW -> ReceiverGW : Transporterer FHIR-meddelelse over EHMI
+deactivate SenderGW
+activate ReceiverGW
+
+== 3. Modtagerside: Opslag på reel EUA-kapabilitet ==
+ReceiverGW -> EER : GET /Endpoint?identifier=eua-gln|5790001234567
+activate EER
+EER --> ReceiverGW : EUA Target Endpoint\n(Modtager EUA kræver EDIFACT)
+deactivate EER
+
+== 4. Modtagerside: Mapning til modtager EUA's format ==
+ReceiverGW -> ReceiverMap : Konverter FHIR -> EDIFACT
+deactivate ReceiverGW
+activate ReceiverMap
+ReceiverMap -> Receiver : Afleverer EDIFACT i lokal postkasse
+deactivate ReceiverMap
+activate Receiver
+
+== 5. Kvitteringsflow: Dobbelt mapning tilbage ==
+Receiver --> ReceiverMap : Returnerer EDIFACT kvittering
+deactivate Receiver
+activate ReceiverMap
+ReceiverMap -> ReceiverGW : Konverter EDIFACT kvittering -> FHIR Ack
+deactivate ReceiverMap
+activate ReceiverGW
+
+ReceiverGW --> SenderGW : Transporterer FHIR Ack over EHMI
+deactivate ReceiverGW
+activate SenderGW
+
+SenderGW -> SenderMap : Konverter FHIR Ack -> OIOXML CTL
+activate SenderMap
+SenderMap --> SenderGW : Returnerer OIOXML CTL
+deactivate SenderMap
+
+SenderGW --> Sender : Afleverer OIOXML CTL til Afsender EUA
+deactivate SenderGW
+
+@enduml

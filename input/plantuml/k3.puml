@@ -1,0 +1,55 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+title Komb. 3: Integreret EUA+MSH (Afsender) -> Integreret MSH+AP/VANS (Modtager)
+
+legend top
+  **Scenarie:** Moderne kommunalt system (FHIR nativt) sender til en lægepraksis på klassisk VANS.
+  * **Afsenderside (Variant A1):** EUA sender FHIR nativt direkte til sit Access Point.
+  * **Modtagerside (Variant M3):** VANS-leverandørens MSH nedkonverterer FHIR til OIOXML før levering i praksissystemet.
+endlegend
+
+box "Afsenderside (Variant A1: Integreret EUA+MSH)" #F4F8FB
+    actor "Afsender EUA + MSH\n(FHIR Nativ)" as S_EUA_MSH
+    participant "Afsender AP/VANS" as S_AP
+end box
+
+participant "EER" as EER
+
+box "Modtagerside (Variant M3: MSH i AP/VANS)" #F9F5FA
+    participant "Modtager MSH + AP/VANS" as R_MSH_AP
+    actor "Modtager EUA\n(OIOXML)" as R_EUA
+end box
+
+activate S_EUA_MSH
+S_EUA_MSH -> EER : Opslag på modtager gs1.org/gln
+EER --> S_EUA_MSH : Modtager Public=FHIR
+
+note right of S_EUA_MSH
+  **Pass-through:**
+  Afsender udnytter modtagers offentlige
+  FHIR-kapabilitet uden at kende til OIOXML
+end note
+S_EUA_MSH -> S_AP : Overdrager FHIR-besked
+deactivate S_EUA_MSH
+
+activate S_AP
+S_AP -> R_MSH_AP : Transporterer FHIR-besked
+deactivate S_AP
+
+activate R_MSH_AP
+R_MSH_AP -> EER : Opslag på modtager eua-gln
+EER --> R_MSH_AP : Modtager EUA kræver OIOXML
+
+note left of R_MSH_AP
+  **Modtager-mapning:**
+  VANS/AP konverterer FHIR -> OIOXML
+  til modtagerens lokale postkasse
+end note
+R_MSH_AP -> R_MSH_AP : Konverterer FHIR -> OIOXML
+R_MSH_AP -> R_EUA : Afleverer OIOXML besked
+deactivate R_MSH_AP
+
+@enduml

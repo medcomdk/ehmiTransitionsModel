@@ -1,0 +1,62 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+box "Afsenderside" #F4F8FB
+    actor "Afsender EUA" as Sender
+    participant "Afsender AP / VANS" as SenderGW
+end box
+
+participant "EER\n(FHIR Endpoint Register)" as EER
+
+box "Modtagerside (GLN: 5790001234567)" #F9F5FA
+    participant "Modtager AP / VANS\n(Modtager-gateway)" as ReceiverGW
+    participant "Modtager Mapningskomponent" as Map
+    actor "Modtager EUA\n(Fagsystem)" as Receiver
+end box
+
+== 1. Afsenderside: Opslag på offentlig kapabilitet ==
+Sender -> EER : GET /Endpoint?identifier=gs1.org/gln|5790001234567
+activate EER
+EER --> Sender : Public Endpoint\n(Accepterer FHIR CareCommunication)
+deactivate EER
+
+Sender -> SenderGW : Afsend FHIR-meddelelse
+activate SenderGW
+SenderGW -> ReceiverGW : Transporterer FHIR-meddelelse til GLN 5790001234567
+deactivate SenderGW
+activate ReceiverGW
+
+== 2. Modtagerside: Opslag på reel EUA-kapabilitet ==
+note right of ReceiverGW
+  Modtagersiden skal nu finde ud af,
+  hvilket format den lokale EUA reelt forstår
+end note
+ReceiverGW -> EER : GET /Endpoint?identifier=eua-gln|5790001234567
+activate EER
+EER --> ReceiverGW : EUA Target Endpoint\n(Kräver OIOXML DIS91 via lokal postkasse)
+deactivate EER
+
+== 3. Modtagerside: Lokal mapning og aflevering ==
+ReceiverGW -> Map : Konverter indkommende FHIR -> OIOXML DIS91
+deactivate ReceiverGW
+activate Map
+Map -> Receiver : Afleverer OIOXML i EUA'ens format
+deactivate Map
+activate Receiver
+
+== 4. Kvitteringsflow tilbage gennem modtagersidens mapning ==
+Receiver --> Map : Returnerer OIOXML kvittering (CTL)
+deactivate Receiver
+activate Map
+Map -> ReceiverGW : Konverterer OIOXML CTL -> FHIR Acknowledgement
+deactivate Map
+activate ReceiverGW
+ReceiverGW --> SenderGW : Sender FHIR kvittering retur
+deactivate ReceiverGW
+activate SenderGW
+SenderGW --> Sender : Modtager FHIR kvittering
+deactivate SenderGW
+
+@enduml

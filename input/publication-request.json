@@ -1,0 +1,15 @@
+{
+    "package-id": "dk-ehmi-transitionsModel",
+    "version": "0.1.0",
+    "path": "http://medcomehmi.dk/ig/dk-ehmi-transitionsModel/0.1.0",
+    "status": "draft",
+    "sequence": "draft",
+    "first" : true,
+    "ci-build" : "https://build.fhir.org/ig/medcomdk/dk-ehmi-transitionsModel",
+    "milestone" : true,
+    "title": "DK EHMI TransitionsModel",
+    "category": "ehmiTransitionsModel",
+    "introduction": "The DK EHMI TransitionsModel",
+    "descmd": "@release-notes.md"
+}
+  

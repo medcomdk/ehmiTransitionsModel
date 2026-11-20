@@ -1,0 +1,55 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+title Komb. 7: Integreret MSH+AP/VANS (Afsender) -> Integreret EUA+MSH (Modtager)
+
+legend top
+  **Scenarie:** Ældre lægesystem (OIOXML) sender via sin VANS-leverandør til et moderne modtagersystem (FHIR nativt).
+  * **Afsenderside (Variant A3):** VANS-leverandørens indbyggede MSH opgraderer beskeden fra OIOXML til FHIR.
+  * **Modtagerside (Variant M1):** Modtagerens EUA har indbygget MSH og indlæser den rene FHIR-besked direkte uden konvertering.
+endlegend
+
+box "Afsenderside (Variant A3: MSH i AP/VANS)" #F4F8FB
+    actor "Afsender EUA\n(OIOXML)" as S_EUA
+    participant "Afsender MSH + AP/VANS" as S_MSH_AP
+end box
+
+participant "EER" as EER
+
+box "Modtagerside (Variant M1: Integreret EUA+MSH)" #F9F5FA
+    participant "Modtager AP/VANS" as R_AP
+    actor "Modtager EUA + MSH\n(FHIR Nativ)" as R_EUA_MSH
+end box
+
+S_EUA -> S_MSH_AP : Afleverer OIOXML besked
+activate S_MSH_AP
+S_MSH_AP -> EER : Opslag på afsender eua-gln + modtager gs1.org/gln
+EER --> S_MSH_AP : Afsender=OIOXML, Modtager Public=FHIR
+
+note right of S_MSH_AP
+  **Afsender-opgradering:**
+  VANS/AP løfter OIOXML til FHIR,
+  så modtager får moderne format
+end note
+S_MSH_AP -> S_MSH_AP : Opgraderer OIOXML -> FHIR
+S_MSH_AP -> R_AP : Transporterer FHIR-besked
+deactivate S_MSH_AP
+
+activate R_AP
+R_AP -> R_EUA_MSH : Afleverer FHIR-besked direkte
+deactivate R_AP
+
+activate R_EUA_MSH
+R_EUA_MSH -> EER : (Valgfrit) Verificerer mod eget eua-gln (FHIR)
+EER --> R_EUA_MSH : Matcher nativt format (FHIR)
+
+note left of R_EUA_MSH
+  **Nativ modtagelse:**
+  Indlæses direkte i fagsystemet
+  uden behov for konvertering
+end note
+deactivate R_EUA_MSH
+
+@enduml

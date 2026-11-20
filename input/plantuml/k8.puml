@@ -1,0 +1,57 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+title Komb. 8: Integreret MSH+AP/VANS (Afsender) -> Standalone MSH (Modtager)
+
+legend top
+  **Scenarie:** Lægepraksis (OIOXML via VANS) sender henvisning/korrespondance til hospital med regional servicebus.
+  * **Afsenderside (Variant A3):** VANS-leverandøren opgraderer OIOXML til FHIR før afsendelse over EHMI.
+  * **Modtagerside (Variant M2):** Hospitalets Standalone MSH konverterer FHIR til hospitalets interne EPJ-format.
+endlegend
+
+box "Afsenderside (Variant A3: MSH i AP/VANS)" #F4F8FB
+    actor "Afsender EUA\n(OIOXML)" as S_EUA
+    participant "Afsender MSH + AP/VANS" as S_MSH_AP
+end box
+
+participant "EER" as EER
+
+box "Modtagerside (Variant M2: Standalone MSH)" #F9F5FA
+    participant "Modtager AP/VANS" as R_AP
+    participant "Standalone MSH" as R_MSH
+    actor "Modtager EUA\n(Internt EPJ-format)" as R_EUA
+end box
+
+S_EUA -> S_MSH_AP : Afleverer OIOXML besked
+activate S_MSH_AP
+S_MSH_AP -> EER : Opslag på afsender eua-gln + modtager gs1.org/gln
+EER --> S_MSH_AP : Afsender=OIOXML, Modtager Public=FHIR
+
+note right of S_MSH_AP
+  **Afsender-opgradering:**
+  VANS/AP løfter OIOXML -> FHIR
+end note
+S_MSH_AP -> S_MSH_AP : Opgraderer OIOXML -> FHIR
+S_MSH_AP -> R_AP : Transporterer FHIR-besked
+deactivate S_MSH_AP
+
+activate R_AP
+R_AP -> R_MSH : Videresender FHIR-besked
+deactivate R_AP
+
+activate R_MSH
+R_MSH -> EER : Opslag på modtager eua-gln
+EER --> R_MSH : Modtager EUA kræver Internt EPJ-format
+
+note left of R_MSH
+  **Modtager-mapning:**
+  Regional MSH konverterer
+  FHIR -> Internt EPJ-format
+end note
+R_MSH -> R_MSH : Konverterer FHIR -> Internt EPJ-format
+R_MSH -> R_EUA : Afleverer besked til EPJ
+deactivate R_MSH
+
+@enduml

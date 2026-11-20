@@ -1,0 +1,58 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+
+title Komb. 6: Standalone MSH (Afsender) -> Integreret MSH+AP/VANS (Modtager)
+
+legend top
+  **Scenarie:** Hospital med regional servicebus (Standalone MSH) sender til en lægepraksis på klassisk VANS.
+  * **Afsenderside (Variant A2):** Lokal integrationsmotor løfter hospitalets interne format til FHIR før afsendelse.
+  * **Modtagerside (Variant M3):** VANS-leverandørens indbyggede MSH nedkonverterer FHIR til OIOXML før levering i praksissystemets postkasse.
+endlegend
+
+box "Afsenderside (Variant A2: Standalone MSH)" #F4F8FB
+    actor "Afsender EUA\n(Internt format)" as S_EUA
+    participant "Standalone MSH" as S_MSH
+    participant "Afsender AP/VANS" as S_AP
+end box
+
+participant "EER" as EER
+
+box "Modtagerside (Variant M3: MSH i AP/VANS)" #F9F5FA
+    participant "Modtager MSH + AP/VANS" as R_MSH_AP
+    actor "Modtager EUA\n(OIOXML)" as R_EUA
+end box
+
+S_EUA -> S_MSH : Afleverer besked i internt format
+activate S_MSH
+S_MSH -> EER : Opslag på afsender eua-gln + modtager gs1.org/gln
+EER --> S_MSH : Afsender=Internt, Modtager Public=FHIR
+
+note right of S_MSH
+  **Afsender-mapning:**
+  MSH konverterer fra internt format
+  til aftalt offentligt format (FHIR)
+end note
+S_MSH -> S_MSH : Konverterer Internt -> FHIR
+S_MSH -> S_AP : Overdrager FHIR-besked
+deactivate S_MSH
+
+activate S_AP
+S_AP -> R_MSH_AP : Transporterer FHIR-besked (AS4 / VANS)
+deactivate S_AP
+
+activate R_MSH_AP
+R_MSH_AP -> EER : Opslag på modtager eua-gln
+EER --> R_MSH_AP : Modtager EUA kræver OIOXML
+
+note left of R_MSH_AP
+  **Modtager-mapning:**
+  VANS/AP konverterer FHIR til
+  praksissystemets reelle format (OIOXML)
+end note
+R_MSH_AP -> R_MSH_AP : Konverterer FHIR -> OIOXML
+R_MSH_AP -> R_EUA : Afleverer OIOXML i lokal postkasse
+deactivate R_MSH_AP
+
+@enduml
